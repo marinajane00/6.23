@@ -1,0 +1,61 @@
+html,body{
+	padding:0;
+	margin:0;
+	width:100%;
+	height:100%;
+	box-sizing:border-box;
+}
+.admin{
+	background:#f5f4fa;
+	color:#777;
+	width:100%;
+	height:100%;
+	display:flex;
+}
+.admin .left{
+	background:#e5e9f2;
+	width:30%;
+}
+.admin .left .title{
+	padding:.5rem 0 .25rem .5rem;
+}
+.admin .left .chunk .piece:hover{
+	background-color:#d6d9e2;
+}
+.admin .left .chunk .piece{
+	padding:.5rem 0 .5rem 1rem;
+	cursor:pointer;
+}
+.admin .right{
+	background:#fff;
+	padding:1rem .5rem 1rem .5rem;
+	width:70%;
+}
+.admin .right .piece{
+	border-bottom:1px solid #ddd;
+}
+.admin .right .piece:nth-child(2n){
+	background:#fafafa;
+}
+.admin .right .title{
+	padding:.5rem;
+}
+.admin .right .title span{
+	padding-right:1rem;
+	cursor:pointer;
+}
+.admin .right .record{
+	background-color:#f7f7f7;
+	border-top:1px solid #ddd;
+	padding:.5rem 0 .5rem .5rem;
+}
+.admin .right tr,th{
+	text-align:center !important;
+	font-size:1.2rem;
+}
+.table th{
+	background:#f5fafe;
+}
+.table,.table thead,.table tr{
+	width:100%;
+}

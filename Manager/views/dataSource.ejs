@@ -1,0 +1,78 @@
+<% include index.ejs %>
+dataSource
+<!--
+<div class="dataSource item">  
+    <div id="app">
+	
+    
+	
+	
+	<hr/>
+	<h1>公司CRUD</h1>
+		<table class="table">
+		<thead>
+		<tr>
+		<% for(var i in data[0]){ %>
+			<th><%= i %></th>
+		<% } %>
+		</tr>
+		</thead>
+		<tbody>
+		<% data.forEach(function(name){ %>
+			<tr>
+			<% for(var i in name){ %>
+			<th><input type="text" class="input-text" style="width:120px;" name="<%= i %>" value=<%= name[i] %> /></th>  
+			<% } %>
+			</tr>
+		<% }) %>
+		</tbody>
+		</table>
+		<table class="table">
+		<form method="post">
+			<tr>
+			<% for(var i in data[0]){ %>
+			<th><input type="text" class="input-text" style="width:120px;" name="<%= i %>" value="" />  
+			<% } %></th>
+			</tr>
+			<button type="sumbit" style="float:right;">添加</button>
+		</form>
+		</table>
+	</div>	
+</div>
+-->
+<script src="js/vue.min.js"></script>
+<script>  
+/*
+	var app = new Vue({
+	    el: '#app',
+	    data: {
+		
+		},
+		mounted:function(){
+			
+		},
+		watch: {  
+		},
+		methods:{
+			
+		}
+	});
+	*/
+	/*
+    function uploadFile(){
+	
+		var reader = new FileReader();
+		var file=themefile.files[0];
+		reader.readAsDataURL(file);
+		var url = window.webkitURL.createObjectURL(file) ;
+		show.src=url;
+		reader.onload = function(e) {
+　　　　	console.log(e.target.result)
+		}
+		reader.onloadend=function(){
+			console.log("loaded")
+		}
+	
+	
+	}*/
+</script>

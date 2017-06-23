@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>home_page</title>
+<link href="/css/style.css" rel="stylesheet">
+<link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<section id="container" class="">
+    <!--header start-->
+    <header class="header white-bg">
+        <div class="sidebar-toggle-box">
+            <div data-original-title="Toggle Navigation" data-placement="right"
+                 class="tooltips"></div>
+        </div>
+        <!--logo start-->
+        <a href="#" class="logo">DXF<span>企业数据工厂</span></a>
+        <!--logo end-->
+        
+        <div class="top-nav">
+            <!--search & user info start-->
+            <ul class="nav pull-right top-menu">
+                <!-- user login dropdown start-->
+                <li class="dropdown"><a 
+                                        class="dropdown-toggle" href="#">
+                    <img alt="" src=""> <span
+                        class="username"></span> <b class="caret"></b>
+                </a>
+                    <ul class="dropdown-menu extended logout" id="userDown">
+                        <div class="log-arrow-up"></div>
+
+                        <li><a href="login.html"><i class="icon-key"></i> Log Out</a></li>
+                    </ul>
+                </li>
+                <!-- user login dropdown end -->
+            </ul>
+            <!--search & user info end-->
+        </div>
+    </header>
+    <!--header end-->
+
+
+    <!--sidebar start-->
+    <aside>
+        <div id="sidebar" class="nav-collapse ">
+            <!-- sidebar menu start-->
+            <ul class="sidebar-menu">
+                <li class="c_index">
+				<!--
+                    <a class="" href="./dataSource" onclick="page(this)">
+                        <i class="icon-dashboard"></i> <span> DataSource上传主题</span> <span class="badge bg-important">7</span>
+                    </a>
+				-->
+                </li>
+                <!--  li><a class="" href="inbox.html"> <i class="icon-bar-chart"></i>
+                        <span>创建图表 </span>
+                </a></li-->
+                <li class="sub-menu f_screen">
+                    <a href="./admin?id=1" class="" onclick="page(this)">
+                        <i class="icon-th"></i> <span >Admin数据更改</span> <span class="arrow"></span>
+                    </a>
+                    <ul class="sub">
+                        <li class="c_scenes"><a class="" href="scenes.html">场景管理</a></li>
+                        <li class="c_layout"><a class="" href="layout">主题管理</a></li>
+                    </ul>
+                </li>
+                <li class="sub-menu f_rchart">
+				<!--
+                    <a href="./table?member=1&theme=1" class="" onclick="page(this)">
+                        <i class="icon-bar-chart"></i> <span >Table监控</span> <span class="arrow"></span>
+                    </a>
+					-->
+					
+                    <ul class="sub">
+                        <li><a class="" href="general.html">General</a></li>
+                        <li class="c_ctheme"><a class="" href="ctheme">主题创建</a></li>
+                        <li><a class="" href="slider.html">数据建模</a></li>
+                    </ul>
+                </li>
+                <li class="sub-menu"><a href="./upload" class=""> <i
+                        class="icon-tasks"></i> <span >Upload上传</span> <span class="arrow"></span>
+                </a>
+                    <ul class="sub">
+                        <li><a class="" href="form_component.html">接口</a></li>
+                        <li><a class="" href="javascript:;" onclick="toPage('form_wizard.html')">数据库</a></li>
+                        <li><a class="" href="form_validation.html">ODS</a></li>
+                    </ul>
+                </li>
+				<!--
+                <li class="sub-menu"><a href="javascript:;" class=""  onclick="page(this)"> <i
+                        class="icon-cogs"></i> <span>日志</span> <span class="arrow"></span>
+                </a>
+                </li>
+				<li class="sub-menu"><a href="javascript:;" class="" onclick="page(this)"> <i
+                        class="icon-cogs"></i> <span>控制台</span> <span class="arrow"></span>
+                </a>
+                </li>
+				-->
+				<li class="sub-menu"><a href="http://192.168.147.107:7979/test.html" class="" onclick="page(this)"> <i
+                        class="icon-cogs"></i> <span>预览Test.html</span> <span class="arrow"></span>
+                </a>
+                </li>
+				<p>日志</p>
+				<p>控制台</p>
+            </ul>
+            <!-- sidebar menu end-->
+        </div>
+    </aside>
+    <!--main content start-->
+    <section id="main-content">
+        <section class="wrapper">
+		</section>
+	</section>
+</section>
+<script>
+function page(e){
+	console.log(e)
+}
+</script>
+</body>
+</html>

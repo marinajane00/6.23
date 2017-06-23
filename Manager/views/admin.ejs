@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>admin</title>
+<link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+</head>
+	<div id="theme" class='admin item'>
+		<div class="left">
+			<p class="title">元数据</p>
+			<div class="chunk">
+			<% for(var id in data){ %>
+				<!-- 数据列名 -->
+				<p class="piece" @click="show('<%= id %>')">
+					<%= id %>&nbsp;
+					<span style="color:red;">状态:<%= db[id.substr(-1,1)-1].onz%></span>
+				<p/>
+			<% } %>
+			</div>
+		</div>
+		<div class="right">
+			<p class="title">
+			<span onclick="upload.click()">导入数据</span>
+			<span>下载Excel模板</span><span>数据导出</span><span>筛选字段</span></p>
+			<div id="drop">
+            <input type="file" id="upload" name="" v-show="false">
+			</div>
+			<div id="wrap">
+			<div id="table"></div>
+			<% for(var id in data){ %>
+			<div v-show="hide.<%= id %>">
+			<!-- 数据列名 -->
+			<p class="record"><%= id %></p>
+			<table id="<%= id %>" class="table">
+			<% for(var i in data[id][0]){ %>
+				<!-- 字段名 -->
+				<th><%= i %></th>
+			<% } %>
+			<% for(var name in data[id]){ %>
+			<tr class="piece">
+				<% for(var i in data[id][name]){ %>
+					<!-- 记录 -->
+					<td><%= data[id][name][i] %></td>
+				<% } %>
+			</tr>
+			<% } %>
+			</table>
+			</div>
+			<% } %>
+			</div>
+		</div>
+	</div>
+	
+	<!-- +++ -->
+	
+	<script src="js/vue.min.js"></script>
+	<script src="js/jszip.js"></script>
+	<script src="js/xlsx.js"></script>
+	
+<script> 
+var temp= <%- JSON.stringify(data) %>
+var obj={}
+for(var i in temp){
+	obj[i]=false;
+}
+var app = new Vue({
+	el: '#theme',
+	data:{
+		hide:obj,
+		data:temp
+	},
+	methods:{
+		show:function(e){
+			for(var i in this.hide){
+				this.hide[i]=false;
+			}
+			this.hide[e]=true;
+		},
+		file(e){
+			console.log(window.URL.createObjectURL(e.files[0]))
+		}
+	  },
+	  mounted(){
+		var self=this;
+
+		}//【mounted结束】
+});
+	
+var drop = document.getElementById("drop"),
+	upload = document.getElementById("upload"),
+	tableC = document.getElementById("table");
+	X = XLSX,
+	rAbs = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+drop.addEventListener('click',handleClick,false);
+drop.addEventListener('dragover',handleDragOver,false);
+drop.addEventListener('dragleave',handleDragLeave,false);
+drop.addEventListener('mouseout',handleDragLeave,false);
+drop.addEventListener('drop',function(){
+	handleDrop(function(data){
+		makeTable(data);
+	})
+},false);
+upload.addEventListener('change',function(){
+	handleChange(function(data){
+		makeTable(data);
+	})
+},false);
+function clearTable(){
+	tableC.innerHTML = '';
+}
+function makeTable(data){
+	clearTable();
+	for(var index in data){ //遍历每个表
+		var table = document.createElement("table"),
+			tr = document.createElement("tr"),
+			td = document.createElement("td"),
+			keys = Object.keys(data[index][0]);
+		td.innerHTML = index + "数据";
+		td.colspan = keys.length;
+		tr.appendChild(td);
+		table.appendChild(tr);
+		table.setAttribute("class","table")
+		tr = document.createElement("tr");
+		for(var i=0,len=keys.length;i<len;i++){
+			td = document.createElement("td");
+			td.innerHTML = keys[i];
+			tr.appendChild(td);
+		}
+		table.appendChild(tr);
+		for(var i=0,len=data[index].length;i<len;i++){ //循环表中每条数据
+			tr = document.createElement("tr")
+			var item = data[index][i];
+			for(var col in item){
+				td = document.createElement("td");
+				td.innerHTML = item[col];
+				tr.appendChild(td);
+			}
+			table.appendChild(tr);
+		}
+		tableC.appendChild(table);
+	}
+}
+function handleFile(files,callback){
+	var f = files[0],
+		reader = new FileReader(),
+		name = f.name;
+	reader.onload = function(){
+		var data = event.target.result,
+			wb;
+		if(rAbs){
+			wb = X.read(data,{type : 'binary'});
+		}else{
+			var arr = fixData(data);
+			wb = X.read(btoa(arr),{type : 'base64'});
+		}
+		console.log(JSON.stringify(to_json(wb).Sheet1))
+		//xhrPOST("http://localhost:7171")
+		callback && callback(to_json(wb));
+	}
+	if(rAbs){
+		reader.readAsBinaryString(f)
+	}else{
+		reader.readAsArrayBuffer(f);
+	}
+	upload.value = '';
+}
+function fixdata(data) {
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w))); o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w))); return o; } function to_json(workbook) { var result = {}; workbook.SheetNames.forEach(function(sheetName) { var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]); if(roa.length > 0){
+			result[sheetName] = roa;
+		}
+	});
+	return result;
+}
+function handleClick(){
+	upload.click();
+}
+function handleChange(callback){
+	if(upload.value){
+		handleFile(event.target.files,callback);
+	}
+}
+function handleDrop(callback){
+	event.preventDefault();
+	event.stopPropagation();
+	handleFile(event.dataTransfer.files,callback);
+}
+function handleDragOver(){
+	event.preventDefault();
+	event.stopPropagation();
+	drop.className = 'active';
+}
+function handleDragLeave(){
+	drop.className = '';
+}		
+/*
+    var wsUri ="ws://192.168.147.107:7676?id=xz&psw=000000xz&type=jnoos"; 
+	
+	var app = new Vue({
+	    el: '#app',
+	    data: {
+		  db:{},
+		  table:{},
+		  item:{},
+		  add:false
+	    },
+	    mounted:function(){
+		  testWebSocket();
+	    },
+		watch: {  
+			'd': 'change'
+		},
+		methods:{
+			change:function(){
+				this.d=this.d;
+				
+			},
+			connection:function(id,db){
+				websocket.send(JSON.stringify({id:id,db:db}))
+			},
+			show:function(e){
+				console.log(e)
+				this.item=e.data;
+				this.add=true;
+				console.log(e.data)
+			}
+		}
+	})
+    function testWebSocket() { 
+        websocket = new WebSocket(wsUri); 
+        websocket.onopen = function(evt) { 
+            onOpen(evt) 
+        }; 
+        websocket.onclose = function(evt) {
+            onClose(evt) 
+        }; 
+        websocket.onmessage = function(evt) { 
+            onMessage(evt) 
+        }; 
+        websocket.onerror = function(evt) { 
+            onError(evt) 
+        }; 
+    }  
+ 
+    function onOpen(evt) { 
+		console.log("connected")
+        //doSend("WebSocket rocks"); 
+    }  
+ 
+    function onClose(evt) { 
+        console.log("连接关闭")
+    }  
+    function onMessage(evt) { 
+		var results=JSON.parse(evt.data)
+		if(results[0].name){
+			console.log(results)
+			app._data.table=results;
+		}else{
+			app._data.db=results;
+		}
+    }  
+ 
+    function onError(evt) { 
+		console.log("出错啦>-<")
+        console.log(evt)
+    }  
+ 
+    function doSend(message) { 
+        websocket.send(message); 
+    } 
+*/	
+</script> 
+</body>
+</html>
