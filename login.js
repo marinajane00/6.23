@@ -4,7 +4,7 @@ var _url = require('url');
 var WebSocket = require('ws');
 var async = require('async');
 var crypto=require('crypto');
-var db=require("./dbConnection.js");
+var db=require("../Inter/dbConnection.js");
 
 var app = express();
 
@@ -40,12 +40,12 @@ function login(ws,q){
 	async.auto({
 		query:function(cb){
 			//【查询用户】
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM member WHERE name='"+q.company+"'",function(data){
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM member WHERE name= ?",[q.company],function(data){
 				cb(null,data)
 			});
 		},connection:['query',function(e,bigcb){
 			if(e.query.length !=0){
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM manager WHERE companyId='"+e.query[0].id+"' AND name='"+q.user+"' AND psw='"+q.psw+"'",function(data){
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM manager WHERE companyId= ? AND name= ? AND psw= ?",[e.query[0].id,q.user,q.psw],function(data){
 				bigcb(null,data)
 			});
 			}else{

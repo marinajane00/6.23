@@ -21,10 +21,10 @@ server.listen(7171, function listening() {
 wss.on('connection', function(ws, req){
 	var query= _url.parse(req.url, true).query;
 	//console.log(query)
-	//ã€å„ä¸ªç«¯åˆå§‹æ¥æ”¶æ•°æ®ã€‘
+	//¡¾¸÷¸ö¶Ë³õÊ¼½ÓÊÕÊı¾İ¡¿
 	start(ws,query);
 	
-	//ã€æ¥æ”¶è®¾å¤‡ä¿¡æ¯ã€‘
+	//¡¾½ÓÊÕÉè±¸ĞÅÏ¢¡¿
 	ws.on('message', function(message){
 	   var temp=JSON.parse(message);
 	   var handler={};
@@ -34,6 +34,7 @@ wss.on('connection', function(ws, req){
 	   handler["activate"]=activate;
 	   handler["controller"]=controller;
 	   handler["order"]=order;
+	   handler["ctrlToDevice"]=ctrlToDevice;
 	   handler[temp.type](ws,temp.data || null);
 	});
 });
@@ -49,73 +50,125 @@ function start(ws,q){
 
 var deviceData={};
 function deviceMsg(ws,data){
-	//ã€æ¥æ”¶è®¾å¤‡ä¿¡æ¯ã€‘
+	//¡¾½ÓÊÕÉè±¸ĞÅÏ¢¡¿
 	deviceData[data.flag]=data.msg;
 	
 	/*
 	wss.clients.forEach(function each(client) {
 	  if (client !== ws ) {
-		  console.log("è¿™é‡Œå¹¿æ’­")
+		  console.log("ÕâÀï¹ã²¥")
 		client.send(JSON.stringify({code:1000,type:"deviceMsg",data:data}));
 	  }
 	});
 	*/
 }
+function ctrlToDevice(ws,data){
+	wss.clients.forEach(function each(client) {
+	  if (client !== ws ) {
+		  console.log("ÕâÀï¹ã²¥")
+		client.send(JSON.stringify({code:1000,type:"ctrlToDevice"}));
+	  }
+	});
+}
 function receive(ws,data){
 	ws.send(JSON.stringify({code:1000,type:"deviceMsg",data:deviceData}));
 	wss.clients.forEach(function each(client) {
 	  if (client !== ws ) {
-		  console.log("è¿™é‡Œå¹¿æ’­")
+		  console.log("ÕâÀï¹ã²¥")
 		client.send(JSON.stringify({code:1000,type:"receive"}));
 	  }
 	});
 }
 
 function changeTheme(ws,data){
-	//ã€ä¸»é¢˜åˆ†é…ã€‘
-	db.connect("mysql","localhost","xz","000000xz","company","3308","UPDATE device SET themes='"+data.val+"' WHERE  id='"+data.id+"'",function(data){
+	//¡¾Ö÷Ìâ·ÖÅä¡¿
+	var temp=data.val;
+	if(temp){
+		temp=temp.split(",")
+	}else{
+		temp=temp.split("")
+	}
+	if(data.types == "export"){
+		db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT themes FROM device WHERE  id='"+data.id+"'",function(bigData,connection){
+			var themes=bigData[0].themes;
+			if(themes){
+				themes=themes.split(",")
+			}else{
+				themes=themes.split("")
+			}
+			for(var i=0; i<temp.length; i++){
+				for(var x=0; x<themes.length; x++){
+					if(themes[x] == temp[i]){
+						themes.splice(x,temp.length)
+					}
+				}
+			}
+			connection.query("UPDATE device SET themes='"+themes.join(',')+"' WHERE id='"+data.id+"'", function (err,smallData){
+				if (err) return console.error(err);
+				if(smallData){
+					ws.send(JSON.stringify({code:1000,type:"changeTheme",data:data}));
+				}
+			});
+		});
+	}else if(data.types == "import"){
 		console.log(data)
-		if(data){
-			ws.send(JSON.stringify({code:1000,type:"changeTheme"}));
-		}
-	});
+		db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT themes FROM device WHERE  id='"+data.id+"'",function(bigData,connection){
+			var themes=bigData[0].themes;
+			if(themes){
+				themes=themes.split(",")
+			}else{
+				themes=themes.split("")
+			}
+			var arr=themes.concat(temp).filter(function(val,index,self){
+				return self.indexOf(val) == index
+			})
+			console.log(arr)
+			connection.query("UPDATE device SET themes='"+arr.toString()+"' WHERE id='"+data.id+"'", function (err,smallData){
+				if (err) return console.error(err);
+				if(smallData){
+					ws.send(JSON.stringify({code:1000,type:"changeTheme",data:data}));
+				}
+			});
+		});
+
+	}
 }
 function controller(ws,data){
-	//ã€è¿”å›æ§åˆ¶å°é¡µé¢åœ°å€ã€‘
-	console.log("æ§åˆ¶å™¨é€‰æ‹©ä¸»é¢˜"+data)
-	db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM controller WHERE memberId='"+data.company+"' AND themeId='+"+data.id+"+'",function(data){
+	//¡¾·µ»Ø¿ØÖÆÌ¨Ò³ÃæµØÖ·¡¿
+	console.log("¿ØÖÆÆ÷Ñ¡ÔñÖ÷Ìâ"+data)
+	db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM controller WHERE memberId='"+data.company+"' AND themeId='"+data.id+"'",function(data){
 		ws.send(JSON.stringify({code:1000,type:"controller",data:data}));
 	});
 }
 function order(ws,data){
-	//ã€å‘é€æŒ‡ä»¤ã€‘
+	//¡¾·¢ËÍÖ¸Áî¡¿
 	console.log(data)
 	wss.clients.forEach(function each(client) {
 	  if (client !== ws ) {
-		  console.log("è¿™é‡Œå¹¿æ’­")
+		  console.log("ÕâÀï¹ã²¥")
 		client.send(JSON.stringify({code:1000,type:"order",data:data}));
 	  }
 	});
 }
 
 function activate(ws,data){
-	//ã€æ¿€æ´»ä¸»é¢˜ã€‘
-	console.log("å½“å‰æ¿€æ´»ä¸»é¢˜ï¼š"+data)
+	//¡¾¼¤»îÖ÷Ìâ¡¿
+	console.log("µ±Ç°¼¤»îÖ÷Ìâ£º"+data)
 	wss.clients.forEach(function each(client) {
 	  if (client !== ws ) {
-		  console.log("è¿™é‡Œå¹¿æ’­")
+		  console.log("ÕâÀï¹ã²¥")
 		client.send(JSON.stringify({code:1000,type:"activate",data:data}))
 	  }
 	});
 }
-//â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”ã€å„ä¸ªç«¯åˆå§‹æ¥æ”¶æ•°æ®ã€‘
+//¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡¾¸÷¸ö¶Ë³õÊ¼½ÓÊÕÊı¾İ¡¿
 
 function theme(ws,q){
 	//type=theme&company=1&theme=1
 	async.auto({
 		query:function(cb){
-			//ã€æŸä¸€ä¸»é¢˜ä¸‹æ‰€æœ‰çš„æ•°æ®åˆ—ã€‘
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM db WHERE memberId='"+q.company+"' AND themeId='"+q.theme+"' AND onz='1'",function(data){
+			//¡¾Ä³Ò»Ö÷ÌâÏÂËùÓĞµÄÊı¾İÁĞ¡¿
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM db WHERE memberId='"+q.company+"' AND themeId='"+q.theme+"' AND onz='1'",function(data){
 				cb(null,data)
 			});
 		},
@@ -123,7 +176,7 @@ function theme(ws,q){
 			var temp=[];
 			var flag=-1;
 			for(var i=0; i<e.query.length; i++){
-				//ã€æ‰€æœ‰çš„æ•°æ®åˆ—çš„æ•°æ®ã€‘
+				//¡¾ËùÓĞµÄÊı¾İÁĞµÄÊı¾İ¡¿
 				flag++;
 				db.connect(e.query[flag].type,e.query[flag].ip,e.query[flag].user,e.query[flag].psw,e.query[flag].database,e.query[flag].port,"SELECT "+e.query[flag].field+" FROM "+e.query[flag].table,function(data){
 					temp.push(data);
@@ -150,15 +203,15 @@ function themeCtrl(ws,q){
 	//company=1&type=themeCtrl&ip=192.168.147.116
 	async.auto({
 		query:function(cb){
-			//ã€å½“å‰è®¾å¤‡...ã€‘
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM device WHERE ip='"+q.ip+"' AND memberId='"+q.company+"'",function(data){
+			//¡¾µ±Ç°Éè±¸...¡¿
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM device WHERE ip='"+q.ip+"' AND memberId='"+q.company+"'",function(data){
 				cb(null,data)
 			});
 		},connection:['query',function(e,bigcb){
-			//ã€æŸ¥è¯¢åˆ†é…ä¸»é¢˜ã€‘('1','2')
+			//¡¾²éÑ¯·ÖÅäÖ÷Ìâ¡¿('1','2')
 			var temp=e.query[0].themes.split(',').join("','")
 			
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM theme WHERE id in ('"+temp+"')", function (data){
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM theme WHERE id in ('"+temp+"')", function (data){
 				bigcb(null,data)
 			});
 		}]
@@ -171,13 +224,13 @@ function client(ws,q){
 	//company=1&type=client
 	async.auto({
 		query:function(cb){
-			//ã€å…¬å¸ä¸‹æ‰€æœ‰è®¾å¤‡ã€‘
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM device WHERE memberId='"+q.company+"'",function(data){
+			//¡¾¹«Ë¾ÏÂËùÓĞÉè±¸¡¿
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM device WHERE memberId='"+q.company+"'",function(data){
 				cb(null,data)
 			});
 		},connection:function(cb){
-			//ã€å…¬å¸ä¸‹æ‰€æœ‰ä¸»é¢˜ã€‘
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM theme WHERE memberId='"+q.company+"'",function(data){
+			//¡¾¹«Ë¾ÏÂËùÓĞÖ÷Ìâ¡¿
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM theme WHERE memberId='"+q.company+"'",function(data){
 				cb(null,data)
 			});
 		}
@@ -190,15 +243,13 @@ function ctrl(ws,q){
 	//company=1&type=ctrl
 	async.auto({
 		query:function(cb){
-			//ã€å…¬å¸ä¸‹æ‰€æœ‰è®¾å¤‡ã€‘
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM device WHERE memberId='"+q.company+"'",function(data){
+			//¡¾¹«Ë¾ÏÂËùÓĞÉè±¸¡¿
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM device WHERE memberId='"+q.company+"'",function(data){
 				cb(null,data)
 			});
 		},connection:['query',function(e,bigcb){
-			//ã€æŸ¥è¯¢åˆ†é…ä¸»é¢˜ã€‘('1','2')
-			var temp=e.query[0].themes.split(',').join("','")
-			
-			db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM theme WHERE id in ('"+temp+"')", function (data){
+			//¡¾¹«Ë¾ÏÂËùÓĞÖ÷Ìâ¡¿
+			db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM theme WHERE memberId='"+q.company+"'",function(data){
 				bigcb(null,data)
 			});
 		}]
@@ -209,8 +260,8 @@ function ctrl(ws,q){
 }
 function orders(ws,q){
 	//company=1&themeId=1&type=orders
-	db.connect("mysql","localhost","xz","000000xz","company","3308","SELECT * FROM theme WHERE memberId='"+q.company+"' AND themeId='+"+q.themeId+"+'",function(data){
-
+	db.connect("mysql","localhost","xz","000000xz","company","3306","SELECT * FROM theme WHERE memberId='"+q.company+"' AND id='"+q.themeId+"'",function(data){
+		
 		console.log(data)
 	});
 }

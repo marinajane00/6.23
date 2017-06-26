@@ -9,6 +9,7 @@ function connect(type,ip,user,psw,db,port,sql,callback){
 	handler["interface"]=inter;
 	handler[type](ip,user,psw,db,port,sql,callback);
 	console.log("访问次数"+ times++);
+	console.log(sql)
 }
 //【不同的数据库类型连接】
 function mysqlDb(ip,user,psw,db,port,sql,callback){
@@ -21,11 +22,15 @@ function mysqlDb(ip,user,psw,db,port,sql,callback){
 			port: port
 		});
 	pool.getConnection(function (err, connection){
-		if(err)pool.end(function (err) {});
+		if(err)console.log(err);//pool.end(function (err) {});
 		connection.query(sql, function (err,data){
 			//console.log(data)
-			callback(data);
 			connection.release();
+
+            if (err) {
+                return console.error(err);
+            }
+			callback(data,connection);
 		});
 	})
 }

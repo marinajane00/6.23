@@ -23,8 +23,9 @@ function mysqlDb(ip,user,psw,db,port,sql,callback){
 	pool.getConnection(function (err, connection){
 		if(err)console.log(err)
 		connection.query(sql, function (err,data){
-			callback(data);
 			connection.release();
+			callback(data,connection);
+			
 		});
 	})
 }
