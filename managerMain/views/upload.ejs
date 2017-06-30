@@ -1,0 +1,27 @@
+<% include index.ejs %>
+<div class=" item">
+<form method="post" id="form" >
+	<input name="themefile" id="themefile" type="file">
+	<button onclick="uploadFile()">click to upload</button>
+</form>	
+</div>
+<script>
+function uploadFile(){
+	
+	var form1 = new FormData();
+	form1.append("file", themefile.files[0]);
+	var xhr = new XMLHttpRequest();
+	xhr.open("post", './upload', true);
+	xhr.send(form1);
+	xhr.onreadystatechange=function(){
+	/*
+		if(xhr.readyState == 4 && xhr.status == 200){
+			var temp=JSON.parse(xhr.responseText)
+			//window.location.href="http://localhost:3000/table?id="+temp.id
+		}
+	*/
+	}
+
+
+}
+</script>

@@ -106,7 +106,12 @@ function changeTheme(ws,data){
 			connection.query("UPDATE device SET themes='"+themes.join(',')+"' WHERE id='"+data.id+"'", function (err,smallData){
 				if (err) return console.error(err);
 				if(smallData){
-					ws.send(JSON.stringify({code:1000,type:"changeTheme",data:data}));
+					wss.clients.forEach(function each(client) {
+					  if (client !== ws ) {
+						  console.log("这里广播")
+						client.send(JSON.stringify({code:1000,type:"changeTheme",data:data}));
+					  }
+					});
 				}
 			});
 		});
@@ -126,7 +131,12 @@ function changeTheme(ws,data){
 			connection.query("UPDATE device SET themes='"+arr.toString()+"' WHERE id='"+data.id+"'", function (err,smallData){
 				if (err) return console.error(err);
 				if(smallData){
-					ws.send(JSON.stringify({code:1000,type:"changeTheme",data:data}));
+					wss.clients.forEach(function each(client) {
+					  if (client !== ws ) {
+						  console.log("这里广播")
+						client.send(JSON.stringify({code:1000,type:"changeTheme",data:data}));
+					  }
+					});
 				}
 			});
 		});

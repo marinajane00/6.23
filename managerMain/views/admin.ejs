@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>admin</title>
+
+<link rel="stylesheet" href="./css/fonts/Material.css">
+
+<link href="/css/muse-ui.css" rel="stylesheet">
+<link href="/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="/css/admin.css" rel="stylesheet">
+</head>
+<body spellcheck="false">
+</head>
+  
+	<div id="theme" v-cloak class="admin">
+	<mu-row gutter>
+	
+	<!-- 【左边】 -->
+	<mu-col class="left" width="100" tablet="25" desktop="20">
+	<mu-drawer right open docked v-show="hide">
+    <mu-appbar title="主题">
+	<mu-flat-button color="white" icon="done" slot="right" @click="hide=!hide" ></mu-flat-button>
+	</mu-appbar>
+    <mu-list>
+      <mu-list-item v-for="(x,index) in db.theme" :title="x.name" toggleNested @click="toggle(index)">
+		<mu-list-item slot="nested" v-for="(i,name) in x.item" :title="name" @click="itemsDb(i)">
+        <mu-icon slot="left" value="grade"></mu-icon>
+		</mu-list-item>
+	  </mu-list-item>
+    </mu-list>
+    </mu-drawer>
+    </mu-col>
+	
+	<!-- 【右边】 -->
+    <mu-col width="100" tablet="75" :desktop="hide? 80:100" class="rightPart">
+	<div class="right rightItem1" :class="table || excel ? 'rotateBacks' : ''">
+				<div class="panel panel-success">
+					<div class="panel-heading">
+					<h3 class="panel-title">
+					<mu-flat-button icon="menu" @click="hide=!hide" v-if="!hide"></mu-flat-button>
+					<button type="button" class="btn btn-primary " >撤销</button>
+					<div class="popovert">
+					<button type="button" class="btn btn-default" @click="addSource()">新建+</button>
+					<div class="list-group " v-show="addS">
+					  <a href="#" class="list-group-item" @click="editable('addDb')">数据库接入</a>
+					  <a href="#" class="list-group-item" @click="editable('addDb')">数据视图</a>
+					  <a href="#" class="list-group-item" @click="editable('addDb')">接口</a>
+					  <a href="#" class="list-group-item" onclick="upload.click()" @click="editable('inExcel')">EXCEL导入</a>
+					</div>
+					</div>
+					<button type="button" class="btn btn-default">删除选中</button>
+					<button type="button" class="btn btn-default">搜索</button>
+					</h3>
+					<div id="drop">
+					<input type="file" id="upload" name="" v-show="false">
+					</div>
+					<div id="wrap">
+					</div>
+					</div>
+				<!-- 数据源数据 -->
+				
+				<div class="table-responsive " v-show="itemsData">
+				<table class="table table-bordered table-hover">
+					<thead>
+					
+					<tr>
+					  <th><input type="checkbox" value=""></th>
+					  <th v-for="(i,index) in itemsData[0]" v-text="index == 'editable'? '权限' : index == 'memberId'? '公司Id' : index == 'themeId'? '主题Id' : index == 'itemId'? '模块Id' : index == 'onz'? '开启状态' : index "></th>
+					  <th>操作</th>
+					</tr>
+					</thead>
+					<tbody>
+						<tr v-for="i in itemsData" @click="mask(i)">
+						<td><input type="checkbox" value=""></td>
+						<td v-for="(v,vindex) in i">
+							<div v-text="vindex == 'editable' ? v=='1'?'yes':'no' : vindex == 'onz' ? v=='1'?'开启':'关闭' : v" contenteditable="false" ></div>
+						</td>
+						<td>
+						
+						<!-- 编辑记录 -->
+						<button type="button" class="btn btn-success" aria-label="Left Align" v-if="i.editable == '1'" @click="editable('editSource',i)">√</button>
+						<button type="button" class="btn btn-danger" aria-label="Left Align">×</button>
+						</td>
+						</tr>
+					</tbody>
+				</table>
+				<!-- 【修改数据记录】-->
+				<table v-show="updateVal">
+				<tbody>
+				<tr>
+				<td v-for="(val,index) in updateVal"><div v-text="index"></div></td>
+				</tr>
+				<tr>
+				<td v-for="val in updateVal"><input v-model="val" /></td>
+				<td>
+				<button type="button" class="btn btn-success" aria-label="Left Align" @click="updateV()">DONE</button>
+				</td>
+				</tr>
+				</tbody>
+				</table>
+				</div>
+				<mu-pagination total="500" current="1"  v-show="itemsData">
+		</mu-pagination>
+				</div>
+			</div>
+		<!-- 数据表 -->
+		<div class="panel panel-danger mask rightItem2" v-if="current" v-show="maskHide" :class="table? 'rotate' : 'hide'">
+				<div class="panel-heading">
+				<button type="button" class="close" aria-label="Close"  @click="table=false;"><span aria-hidden="true">&times;</span></button>
+				<div>{{current.record.name}}<i v-if="current.record.real == 1" class="badge">R</i><i v-if="current.record.editable == 1" class="badge">E</i><i v-if="current.record.onz == 1" class="badge">ON</i>
+				<button type="button" class="btn btn-default" @click="addVal()">新增+</button></div>
+				</div>
+				<!-- 数据表数据 -->
+				<div class="table-responsive">
+				<table class="table table-bordered table-hover">
+				<thead>
+				<tr>
+				  <th><input type="checkbox" value=""></th>
+				  <th v-for="(i,index) in current.source[0]">
+					<span v-text="index"></span>
+				  </th>
+				  <th v-if="current.record.editable == '1'">操作</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr v-for="(i,index) in current.source">
+				<td><input type="checkbox" value=""></td>
+				<td v-for="(v,vindex) in i">
+					<!-- <input v-model="v" @change="maskData(index,vindex,$event.target.value)"/> -->
+					<div v-text="v" ></div>
+				</td>
+				<td v-if="current.record.editable == '1'">
+				<button type="button" class="btn btn-success" aria-label="Left Align"  @click="editable('editVal',i)">√</button>
+				</td>
+				</tr>
+				</tbody>
+				
+				<!-- 新增数据表记录 -->
+				<tbody v-if="addV">
+				<tr>
+				<td>></td>
+				<td v-for="(i,index) in current.source[0]">
+				  <input />
+			    </td>
+				<td>
+				<button type="button" class="btn btn-success" @click="updateV()">DONE</button>
+				</td>
+				</tr>
+				</tbody>
+				
+				</table>
+				</div>
+		</div>
+		<div class="panel panel-danger mask rightItem3" :class="excel? 'rotate' : 'hide'" >
+		<div class="panel-heading">
+			<button type="button" class="close" aria-label="Close" @click="excel=false"><span aria-hidden="true">&times;</span></button>
+			标题
+			<button type="button" class="btn btn-success " style="margin-left:2rem;" aria-label="Right Align">√</button>
+		</div>
+		<div id="table" class="table-responsive"></div>
+		
+		</div>
+	<!--
+	<mu-row gutter>
+	<mu-flat-button icon="menu" @click="hide=!hide" v-if="!hide"></mu-flat-button>
+	<mu-col width="100" tablet="45" desktop="33">
+	
+	<mu-text-field placeholder="搜索数据源"></mu-text-field>
+	</mu-col>
+    <mu-col width="100" tablet="55" desktop="40">
+    
+  
+	<mu-raised-button class="demo-raised-button" label="删除选中" icon="delete" disabled/>
+	<mu-flat-button label="撤销" icon="menu" primary></mu-flat-button>
+	
+	<mu-icon-menu icon="menu">
+      <mu-menu-item title="数据库接入" ></mu-menu-item>
+      <mu-menu-item title="数据视图" ></mu-menu-item>
+      <mu-menu-item title="EXCEL导入" ></mu-menu-item>
+    </mu-icon-menu>
+	</mu-col>
+	
+	</mu-row>
+	<mu-row gutter>
+      <mu-table fixedHeader
+    enableSelectAll multiSelectable
+    selectable showCheckbox>
+		<mu-thead slot="header">
+		  <mu-tr>
+			<mu-th v-for="(i,index) in itemsData[0]" v-text="index == 'editable'? '权限' : index == 'memberId'? '公司Id' : index == 'themeId'? '主题Id' : index == 'itemId'? '模块Id' : index == 'onz'? '开启状态' : index "></mu-th>
+		  </mu-tr>
+		</mu-thead>
+		<mu-tbody>
+		  <mu-tr v-for="i in itemsData" @click="mask(i)">
+			<mu-td v-for="(v,vindex) in i" v-text="vindex == 'editable' ? v=='1'?'yes':'no' : vindex == 'onz' ? v=='1'?'开启':'关闭' : v"></mu-td>
+		  </mu-tr>
+		</mu-tbody>
+	  </mu-table>
+	</mu-row>
+	-->
+	    
+	</mu-col>
+	
+  </mu-row>
+	</div>
+	<!-- -- -->
+	<div id="page1"></div>
+	<div id="view1"></div>
+	<script src="js/vue.min.js"></script>
+	<script src="js/jszip.js"></script>
+	<script src="js/xlsx.js"></script>
+	<script src="js/laypage.js"></script>
+	<script src="js/muse-ui.js"></script>
+<script> 
+var addr="192.168.147.110";
+
+//【初始数据】
+var temp= <%- JSON.stringify(data) %>;
+var tempDb= <%- JSON.stringify(db) %>;
+
+var obj={},
+	tempToggle={};
+for(var i in temp){
+	obj[i]=false;
+}
+
+for(var i=0; i<tempDb.theme.length; i++){
+	tempToggle[i]=false;
+	tempToggle[0]=true;
+	
+	tempDb.theme[i].item={};
+	//【主题下的模块】
+	for(var x=0; x<tempDb.db.length; x++){
+		if(tempDb.db[x].themeId == tempDb.theme[i].id){
+			tempDb.theme[i].item[tempDb.db[x].itemId]=[];
+		}
+	}
+	for(var x=0; x<tempDb.db.length; x++){
+	if(tempDb.db[x].themeId == tempDb.theme[i].id){
+			tempDb.theme[i].item[tempDb.db[x].itemId].push(tempDb.db[x])
+		}
+	}
+}
+
+//【websocket连接获取分页及数据】
+var ws = new WebSocket("ws://"+addr+":7777");
+    ws.onopen = function()
+   {
+	  console.log("ws 已连接")
+	  ws.send(1)
+	  
+   };
+   var i=0;
+   ws.onmessage = function (evt) 
+   { 
+	  console.log(evt.data)
+	  //【获取到当前总页数与数据】
+	  var msg=JSON.parse(evt.data)
+	  console.log(msg.total)
+	  app.pageData=msg.data;
+	  
+	  if(i == 0){
+	  laypage({
+		  cont: 'page1', 
+		  pages: msg.total, 
+		  curr: 1, 
+		  jump: function(obj, first){ //触发分页后的回调
+			console.log(obj)
+			if(!first){ 
+			  ws.send(obj.curr);
+			}
+		  }
+		});
+		i++;
+	  }
+   };
+	
+	
+   ws.onclose = function()
+   { 
+	  console.log("连接已关闭..."); 
+   };
+   
+var app = new Vue({
+	el: '#theme',
+	data:{
+		hide:true,
+		d:temp,
+		db:tempDb,
+		toggleX:tempToggle,
+		current:false,
+		maskHide:true,
+		itemsData:false,
+		updateVal:false,//修改记录
+		addS:false,//新增数据源
+		addV:false,//新增数据表记录
+		pageData:false,
+		rotate:false,
+		dataSource:[11,22,33],
+		excel:false,
+		table:false
+	},
+	methods:{
+		toggle:function(e){
+			//【显示隐藏主题】
+			//this.toggleX[e]=!this.toggleX[e]
+			for(var i in this.toggleX){
+				this.toggleX[i]=false;
+			}
+			this.toggleX[e]=true;
+			//this.hide=!this.hide;
+		},
+		mask:function(e){
+			//【将数据源对应数据表显示】
+			
+			this.current={record:e,source:this.d[e.name]}
+			console.log(this.current)
+			this.maskHide=true;
+			this.table=true;
+		},
+		maskData:function(pre,nxt,val){
+			//【修改数据记录】
+			console.log(this.current);
+			console.log(this.current.source[pre][nxt])
+			ws.send(val)
+		},
+		itemsDb:function(e){
+			//【将单条数据源记录变为可修改】
+			this.itemsData=e;
+		},
+		editable:function(type,e){
+			var handler={};
+			handler["editSource"]=this.editSource;
+			handler["editVal"]=this.editVal;
+			handler["addDb"]=this.addDb;
+			handler["inExcel"]=this.inExcel;
+			handler[type](e);
+			//this.addS=!this.addS;
+			
+		},
+		updateV:function(e){
+			//【修改记录】
+			console.log(this.updateVal)
+			this.addV=false;
+		},
+		addSource:function(){
+			this.addS=!this.addS;
+		},
+		addVal:function(){
+			this.addV=true;
+		},
+		inExcel:function(){
+			this.excel=true;
+		},
+		editSource:function(e){
+			this.updateVal=e;
+		},
+		editVal:function(e){
+			this.updateVal=e;
+		},
+		addDb:function(e){
+			//【新增一条数据源】
+			this.updateVal={
+				database:"",editable:"",field:"",id:"",ip:"",itemId:"",memberId:"",name:"",onz:"",port:"",psw:"",real:"",table:"",themeId:"",type:"",user:""
+			}
+		}
+	  },
+	  mounted(){
+		var self=this;
+		console.log(this.db)
+		console.log(this.d)
+		}//【mounted结束】
+});
+
+   
+//【excel导入数据】   
+var drop = document.getElementById("drop"),
+	upload = document.getElementById("upload"),
+	tableC = document.getElementById("table");
+	X = XLSX,
+	rAbs = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+drop.addEventListener('click',handleClick,false);
+drop.addEventListener('dragover',handleDragOver,false);
+drop.addEventListener('dragleave',handleDragLeave,false);
+drop.addEventListener('mouseout',handleDragLeave,false);
+drop.addEventListener('drop',function(){
+	handleDrop(function(data){
+		makeTable(data);
+	})
+},false);
+upload.addEventListener('change',function(){
+	handleChange(function(data){
+		makeTable(data);
+	})
+},false);
+function clearTable(){
+	tableC.innerHTML = '';
+}
+function makeTable(data){
+	clearTable();
+	for(var index in data){ //遍历每个表
+		var table = document.createElement("table"),
+			tbody = document.createElement("tbody"),
+			tr = document.createElement("tr"),
+			td = document.createElement("td"),
+			keys = Object.keys(data[index][0]);
+		td.innerHTML = index;
+		td.colspan = keys.length;
+		tr.appendChild(td);
+		table.appendChild(tr);
+		
+		table.setAttribute("class","table table-bordered table-hover")
+		thead = document.createElement("thead");
+		tr = document.createElement("tr");
+		thead.appendChild(tr);
+		for(var i=0,len=keys.length;i<len;i++){
+			th = document.createElement("th");
+			th.innerHTML = keys[i];
+			tr.appendChild(th);
+		}
+		table.appendChild(thead);
+		for(var i=0,len=data[index].length;i<len;i++){ //循环表中每条数据
+			tr = document.createElement("tr")
+			var item = data[index][i];
+			for(var col in item){
+				td = document.createElement("td");
+				td.innerHTML = item[col];
+				tr.appendChild(td);
+			}
+			tbody.appendChild(tr);
+		}
+		table.appendChild(tbody);
+		tableC.appendChild(table);
+	}
+}
+function handleFile(files,callback){
+	var f = files[0],
+		reader = new FileReader(),
+		name = f.name;
+	reader.onload = function(){
+		var data = event.target.result,
+			wb;
+		if(rAbs){
+			wb = X.read(data,{type : 'binary'});
+		}else{
+			var arr = fixData(data);
+			wb = X.read(btoa(arr),{type : 'base64'});
+		}
+		console.log(JSON.stringify(to_json(wb)))
+		callback && callback(to_json(wb));
+	}
+	if(rAbs){
+		reader.readAsBinaryString(f)
+	}else{
+		reader.readAsArrayBuffer(f);
+	}
+	upload.value = '';
+}
+function fixdata(data) {
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w))); o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w))); return o; } function to_json(workbook) { var result = {}; workbook.SheetNames.forEach(function(sheetName) { var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]); if(roa.length > 0){
+			result[sheetName] = roa;
+		}
+	});
+	return result;
+}
+function handleClick(){
+	upload.click();
+}
+function handleChange(callback){
+	if(upload.value){
+		handleFile(event.target.files,callback);
+	}
+}
+function handleDrop(callback){
+	event.preventDefault();
+	event.stopPropagation();
+	handleFile(event.dataTransfer.files,callback);
+}
+function handleDragOver(){
+	event.preventDefault();
+	event.stopPropagation();
+	drop.className = 'active';
+}
+function handleDragLeave(){
+	drop.className = '';
+}		
+</script> 
+</body>
+</html>

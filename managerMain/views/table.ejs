@@ -1,0 +1,61 @@
+<% include index.ejs %>
+	<div id="theme" class='admin item'>
+		<div class="left">
+			<p class="title">元数据</p>
+			<div class="chunk">
+			<% for(var id in data){ %>
+				<!-- 数据列名 -->
+				<p class="piece" @click="show('<%= id %>')">
+					<%= id %>&nbsp;
+					<span style="color:red;">状态:<%= db[id.substr(-1,1)-1].onz%></span>
+				<p/>
+			<% } %>
+			</div>
+		</div>
+		<div class="right">
+			<p class="title">
+			<span onclick="upload.click()">导入数据</span>
+			<span>下载Excel模板</span><span>数据导出</span><span>筛选字段</span></p>
+			<div id="drop">
+            <input type="file" id="upload" name="" v-show="false">
+			</div>
+			<div id="wrap">
+			<div id="table"></div>
+			<% for(var id in data){ %>
+			<div v-show="hide.<%= id %>">
+			<!-- 数据列名 -->
+			<p class="record"><%= id %></p>
+			<table id="<%= id %>" class="table">
+			<% for(var i in data[id][0]){ %>
+				<!-- 字段名 -->
+				<th><%= i %></th>
+			<% } %>
+			<% for(var name in data[id]){ %>
+			<tr class="piece">
+				<% for(var i in data[id][name]){ %>
+					<!-- 记录 -->
+					<td><%= data[id][name][i] %></td>
+				<% } %>
+			</tr>
+			<% } %>
+			</table>
+			</div>
+			<% } %>
+			</div>
+		</div>
+		<pre v-text="this.d">
+		</pre>
+		<pre v-text="this.db">
+		</pre>
+	</div>
+<script src="js/vue.min.js"></script>
+<script>  
+	var app = new Vue({
+	    el: '#app',
+	    data: {
+			
+		},
+		methods:{
+		}
+	});
+</script>
